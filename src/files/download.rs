@@ -156,8 +156,8 @@ pub async fn download_directory(
         let abs_folder_path = root_path.join(&folder_path);
 
         println!("Creating directory {}", folder_path.display());
-        fs::create_dir_all(&abs_folder_path)
-            .map_err(|err| Error::CreateDirectory(abs_folder_path, err))?;
+        let _ = fs::create_dir_all(&abs_folder_path)
+            .map_err(|err| Error::CreateDirectory(abs_folder_path, err));
 
         for file in folder.files() {
             let file_path = file.relative_path();
@@ -167,12 +167,12 @@ pub async fn download_directory(
                 continue;
             }
 
-            let body = download_file(&hub, &file.drive_id)
+            let Ok(body) = download_file(&hub, &file.drive_id)
                 .await
-                .map_err(Error::DownloadFile)?;
+                .map_err(Error::DownloadFile) else {continue};
 
             println!("Downloading file '{}'", file_path.display());
-            save_body_to_file(body, &abs_file_path, file.md5.clone()).await?;
+            let _ = save_body_to_file(body, &abs_file_path, file.md5.clone()).await;
         }
     }
 
